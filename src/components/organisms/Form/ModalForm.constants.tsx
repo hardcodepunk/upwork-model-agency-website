@@ -3,7 +3,8 @@ export const initialFormData = {
   age: "",
   instagram: "",
   onlyfans: "",
+  email: "",
   honeypot: "",
 }
 
-export const requiredFields = ["fullName", "age", "instagram"]
+export const requiredFields = ["fullName", "age", "instagram", "email"]

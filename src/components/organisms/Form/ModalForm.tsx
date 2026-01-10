@@ -138,6 +138,17 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
               />
 
               <TextField
+                required
+                type="email"
+                label="Email"
+                value={formData.email}
+                error={errors.email}
+                helperText={errors.email && "Required"}
+                onChange={handleChange("email")}
+                fullWidth
+              />
+
+              <TextField
                 label="OnlyFans Username"
                 value={formData.onlyfans}
                 onChange={handleChange("onlyfans")}
