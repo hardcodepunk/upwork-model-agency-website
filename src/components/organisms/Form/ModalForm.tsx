@@ -3,12 +3,14 @@ import { Dialog, DialogContent, DialogActions, TextField, Box, Typography } from
 import ButtonCustom from "@/components/atoms/ButtonCustom/ButtonCustom"
 import { FormContainer, FormSectionTitle } from "./ModalForm.styles"
 import { ModalFormProps } from "./ModalForm.props"
-import { initialFormData, requiredFields } from "./ModalForm.constants"
+import { APPLICATION_FORM_FIELDS, initialFormData } from "@/lib/applicationForm"
 
 type FormData = typeof initialFormData & {
   renderedAt?: number
   turnstileToken?: string
 }
+
+type RequiredField = (typeof APPLICATION_FORM_FIELDS)[number]
 
 const ModalForm = ({ open, handleClose }: ModalFormProps) => {
   const formRenderedTime = useRef<number>(Date.now())
@@ -37,8 +39,8 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
 
   const validateForm = () => {
     const newErrors: Partial<Record<keyof FormData, boolean>> = {}
-    for (const field of requiredFields) {
-      const value = formData[field]
+    for (const field of APPLICATION_FORM_FIELDS) {
+      const value = formData[field as RequiredField]
       if (!value) newErrors[field] = true
     }
     setErrors(newErrors)

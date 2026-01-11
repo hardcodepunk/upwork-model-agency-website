@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import nodemailer from "nodemailer"
-import { Redis } from "@upstash/redis"
-import { APPLICATION_FORM_FIELDS, ApplicationFormData } from "@/lib/applicationForm"
+import { createClient, type RedisClientType } from "redis"
+import { APPLICATION_FORM_FIELDS, type ApplicationFormData } from "@/lib/applicationForm"
 
-const redis = Redis.fromEnv()
+export const runtime = "nodejs"
 
 const RATE_LIMIT_WINDOW_SEC = 600
 const RATE_LIMIT_MAX = 20
+
+let redisClient: RedisClientType | null = null
+let redisConnecting: ReturnType<RedisClientType["connect"]> | null = null
 
 function getClientIp(req: NextRequest) {
   const fwd = req.headers.get("x-forwarded-for")
@@ -27,39 +30,69 @@ function isEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 }
 
+function pickString(obj: Record<string, unknown>, key: string) {
+  const v = obj[key]
+  return typeof v === "string" ? v.trim() : ""
+}
+
 function validatePayload(raw: unknown): { ok: true; data: ApplicationFormData } | { ok: false; error: string } {
   if (typeof raw !== "object" || raw === null) return { ok: false, error: "Invalid payload" }
   const obj = raw as Record<string, unknown>
 
-  const fullName = typeof obj.fullName === "string" ? obj.fullName.trim() : ""
-  const age = typeof obj.age === "string" ? obj.age.trim() : ""
-  const instagram = typeof obj.instagram === "string" ? obj.instagram.trim() : ""
-  const email = typeof obj.email === "string" ? obj.email.trim() : ""
-  const onlyfans = typeof obj.onlyfans === "string" ? obj.onlyfans.trim() : ""
+  const fullName = pickString(obj, "fullName")
+  const age = pickString(obj, "age")
+  const instagram = pickString(obj, "instagram")
+  const email = pickString(obj, "email")
+  const onlyfans = pickString(obj, "onlyfans")
   const honeypot = typeof obj.honeypot === "string" ? obj.honeypot : ""
   const renderedAt = typeof obj.renderedAt === "number" ? obj.renderedAt : undefined
   const turnstileToken = typeof obj.turnstileToken === "string" ? obj.turnstileToken : undefined
 
+  const requiredMap: Record<string, string> = { fullName, age, instagram, email }
   for (const field of APPLICATION_FORM_FIELDS) {
-    if (!String({ fullName, age, instagram, email }[field]).trim()) {
-      return { ok: false, error: `Missing ${field}` }
-    }
+    if (!requiredMap[field]?.trim()) return { ok: false, error: `Missing ${field}` }
   }
 
-  if (!fullName || fullName.length > 120) return { ok: false, error: "Invalid name" }
+  if (fullName.length > 120) return { ok: false, error: "Invalid name" }
 
   const ageNum = Number(age)
   if (!Number.isFinite(ageNum) || ageNum < 18 || ageNum > 99) return { ok: false, error: "Invalid age" }
 
-  if (!instagram || instagram.length > 60) return { ok: false, error: "Invalid instagram" }
-  if (!email || email.length > 254 || !isEmail(email)) return { ok: false, error: "Invalid email" }
+  if (instagram.length > 60) return { ok: false, error: "Invalid instagram" }
+  if (email.length > 254 || !isEmail(email)) return { ok: false, error: "Invalid email" }
   if (onlyfans && onlyfans.length > 60) return { ok: false, error: "Invalid onlyfans" }
   if (honeypot) return { ok: false, error: "Bot" }
 
   return { ok: true, data: { fullName, age, instagram, email, onlyfans, honeypot, renderedAt, turnstileToken } }
 }
 
-async function rateLimitOrThrow(ip: string) {
+async function ensureRedis(): Promise<RedisClientType | null> {
+  const url = process.env.REDIS_URL
+  if (!url) return null
+
+  if (redisClient?.isOpen) return redisClient
+
+  if (!redisClient) {
+    redisClient = createClient({ url })
+    redisClient.on("error", err => console.error("Redis error:", err))
+  }
+
+  if (!redisClient.isOpen) {
+    if (!redisConnecting) {
+      redisConnecting = redisClient.connect().finally(() => {
+        redisConnecting = null
+      })
+    }
+    await redisConnecting
+  }
+
+  return redisClient
+}
+
+async function rateLimit(ip: string): Promise<boolean> {
+  const redis = await ensureRedis()
+  if (!redis) return true
+
   const key = `rl:apply:${ip}`
   const count = await redis.incr(key)
   if (count === 1) await redis.expire(key, RATE_LIMIT_WINDOW_SEC)
@@ -90,8 +123,15 @@ async function verifyTurnstile(token: string | undefined, ip: string) {
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request)
 
-  const ok = await rateLimitOrThrow(ip)
-  if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+  let allowed = true
+  try {
+    allowed = await rateLimit(ip)
+  } catch (err) {
+    console.error("Rate limit failure:", err)
+    allowed = true
+  }
+
+  if (!allowed) return NextResponse.json({ error: "Too many requests" }, { status: 429 })
 
   const contentLength = request.headers.get("content-length")
   if (contentLength && Number(contentLength) > 50_000) {
@@ -126,12 +166,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 })
   }
 
-  const secure = smtpPort === 465
-
   const transporter = nodemailer.createTransport({
     host: smtpHost,
     port: smtpPort,
-    secure,
+    secure: smtpPort === 465,
     auth: { user: smtpUser, pass: smtpPass },
   })
 
