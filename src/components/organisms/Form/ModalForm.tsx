@@ -1,66 +1,57 @@
-// React
-import React, { useState, useRef, useEffect } from "react"
-
-// MUI
+import React, { useEffect, useRef, useState } from "react"
 import { Dialog, DialogContent, DialogActions, TextField, Box, Typography } from "@mui/material"
-
-// Components
 import ButtonCustom from "@/components/atoms/ButtonCustom/ButtonCustom"
-
-// Styles
 import { FormContainer, FormSectionTitle } from "./ModalForm.styles"
-
-// Properties
 import { ModalFormProps } from "./ModalForm.props"
-
-// Constants
 import { initialFormData, requiredFields } from "./ModalForm.constants"
 
+type FormData = typeof initialFormData & {
+  renderedAt?: number
+  turnstileToken?: string
+}
+
 const ModalForm = ({ open, handleClose }: ModalFormProps) => {
-  const formRenderedTime = useRef(Date.now())
+  const formRenderedTime = useRef<number>(Date.now())
   const [success, setSuccess] = useState(false)
-  const [formData, setFormData] = useState(initialFormData)
-  const [errors, setErrors] = useState<Record<string, boolean>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState<FormData>(initialFormData)
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, boolean>>>({})
 
   useEffect(() => {
-    if (open) {
-      formRenderedTime.current = Date.now()
-      setSuccess(false)
-      setFormData(initialFormData)
-      setErrors({})
-    }
+    if (!open) return
+    const now = Date.now()
+    formRenderedTime.current = now
+    setSuccess(false)
+    setIsSubmitting(false)
+    setFormData({ ...initialFormData, renderedAt: now })
+    setErrors({})
   }, [open])
 
-  const handleChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, [field]: event.target.value }))
-    setErrors(prev => ({ ...prev, [field]: false }))
-  }
+  const handleChange =
+    <K extends keyof FormData>(field: K) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const value = event.target.value
+      setFormData(prev => ({ ...prev, [field]: value }))
+      setErrors(prev => ({ ...prev, [field]: false }))
+    }
 
   const validateForm = () => {
-    const newErrors: Record<string, boolean> = {}
-    requiredFields.forEach(field => {
-      if (!formData[field as keyof typeof formData]) {
-        newErrors[field] = true
-        console.log(`Missing required field: ${field}`)
-      }
-    })
+    const newErrors: Partial<Record<keyof FormData, boolean>> = {}
+    for (const field of requiredFields) {
+      const value = formData[field]
+      if (!value) newErrors[field] = true
+    }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (isSubmitting) return
+    if (!validateForm()) return
+    if (formData.honeypot || Date.now() - formRenderedTime.current < 3000) return
 
-    if (!validateForm()) {
-      console.warn("❗️Validation failed. Fill required fields.")
-      return
-    }
-
-    if (formData.honeypot || Date.now() - formRenderedTime.current < 3000) {
-      console.warn("🤖 Bot detected")
-      return
-    }
-
+    setIsSubmitting(true)
     try {
       const response = await fetch("/api/send-form-email", {
         method: "POST",
@@ -69,13 +60,13 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
       })
 
       if (response.ok) {
-        console.log("✅ Form successfully sent!")
         setSuccess(true)
       } else {
-        console.error("❌ Error sending form:", await response.text())
+        await response.text()
       }
-    } catch (error) {
-      console.error("❌ Error:", error)
+    } catch {
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -92,9 +83,8 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
             </Typography>
           </Box>
         ) : (
-          <Box component="form" onSubmit={handleSubmit}>
+          <Box component="form" onSubmit={handleSubmit} noValidate>
             <FormContainer>
-              {/* Honeypot hidden field */}
               <Box sx={{ display: "none" }}>
                 <TextField
                   label="Leave this field blank"
@@ -105,14 +95,14 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
                 />
               </Box>
 
-              {/* Personal Information */}
               <FormSectionTitle variant="h6">Apply here</FormSectionTitle>
+
               <TextField
                 required
                 label="Full Name"
                 value={formData.fullName}
-                error={errors.fullName}
-                helperText={errors.fullName && "Required"}
+                error={Boolean(errors.fullName)}
+                helperText={errors.fullName ? "Required" : ""}
                 onChange={handleChange("fullName")}
                 fullWidth
               />
@@ -121,8 +111,8 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
                 required
                 label="Age"
                 value={formData.age}
-                error={errors.age}
-                helperText={errors.age && "Required"}
+                error={Boolean(errors.age)}
+                helperText={errors.age ? "Required" : ""}
                 onChange={handleChange("age")}
                 fullWidth
               />
@@ -131,8 +121,8 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
                 required
                 label="Instagram Handle"
                 value={formData.instagram}
-                error={errors.instagram}
-                helperText={errors.instagram && "Required"}
+                error={Boolean(errors.instagram)}
+                helperText={errors.instagram ? "Required" : ""}
                 onChange={handleChange("instagram")}
                 fullWidth
               />
@@ -142,8 +132,8 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
                 type="email"
                 label="Email"
                 value={formData.email}
-                error={errors.email}
-                helperText={errors.email && "Required"}
+                error={Boolean(errors.email)}
+                helperText={errors.email ? "Required" : ""}
                 onChange={handleChange("email")}
                 fullWidth
               />
@@ -155,14 +145,24 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
                 fullWidth
               />
             </FormContainer>
+
+            <DialogActions sx={{ px: 0 }}>
+              <ButtonCustom onClick={handleClose} disabled={isSubmitting}>
+                Close
+              </ButtonCustom>
+              <ButtonCustom type="submit" disabled={isSubmitting}>
+                Submit
+              </ButtonCustom>
+            </DialogActions>
           </Box>
         )}
       </DialogContent>
 
-      <DialogActions>
-        <ButtonCustom onClick={handleClose}>Close</ButtonCustom>
-        {!success && <ButtonCustom onClick={handleSubmit}>Submit</ButtonCustom>}
-      </DialogActions>
+      {success && (
+        <DialogActions>
+          <ButtonCustom onClick={handleClose}>Close</ButtonCustom>
+        </DialogActions>
+      )}
     </Dialog>
   )
 }
