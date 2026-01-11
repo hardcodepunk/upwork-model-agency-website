@@ -11,13 +11,18 @@ type FormData = typeof initialFormData & {
 }
 
 type RequiredField = (typeof APPLICATION_FORM_FIELDS)[number]
+type FieldErrorMap = Partial<Record<keyof FormData, string>>
+
+function isEmail(s: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
+}
 
 const ModalForm = ({ open, handleClose }: ModalFormProps) => {
   const formRenderedTime = useRef<number>(Date.now())
   const [success, setSuccess] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<FormData>(initialFormData)
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, boolean>>>({})
+  const [errors, setErrors] = useState<FieldErrorMap>({})
 
   useEffect(() => {
     if (!open) return
@@ -34,17 +39,42 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const value = event.target.value
       setFormData(prev => ({ ...prev, [field]: value }))
-      setErrors(prev => ({ ...prev, [field]: false }))
+      setErrors(prev => {
+        if (!prev[field]) return prev
+        const next = { ...prev }
+        delete next[field]
+        return next
+      })
     }
 
   const validateForm = () => {
-    const newErrors: Partial<Record<keyof FormData, boolean>> = {}
+    const nextErrors: FieldErrorMap = {}
+
     for (const field of APPLICATION_FORM_FIELDS) {
-      const value = formData[field as RequiredField]
-      if (!value) newErrors[field] = true
+      const v = String(formData[field as RequiredField] ?? "").trim()
+      if (!v) nextErrors[field] = "Required"
     }
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+
+    const fullName = String(formData.fullName ?? "").trim()
+    if (fullName && fullName.length > 120) nextErrors.fullName = "Too long"
+
+    const ageRaw = String(formData.age ?? "").trim()
+    if (ageRaw) {
+      const ageNum = Number(ageRaw)
+      if (!Number.isFinite(ageNum) || ageNum < 18 || ageNum > 99) nextErrors.age = "Invalid age (18–99)"
+    }
+
+    const instagram = String(formData.instagram ?? "").trim()
+    if (instagram && instagram.length > 60) nextErrors.instagram = "Too long"
+
+    const email = String(formData.email ?? "").trim()
+    if (email && (email.length > 254 || !isEmail(email))) nextErrors.email = "Invalid email"
+
+    const onlyfans = String(formData.onlyfans ?? "").trim()
+    if (onlyfans && onlyfans.length > 60) nextErrors.onlyfans = "Too long"
+
+    setErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -104,7 +134,7 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
                 label="Full Name"
                 value={formData.fullName}
                 error={Boolean(errors.fullName)}
-                helperText={errors.fullName ? "Required" : ""}
+                helperText={errors.fullName ?? ""}
                 onChange={handleChange("fullName")}
                 fullWidth
               />
@@ -112,10 +142,12 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
               <TextField
                 required
                 label="Age"
+                type="number"
                 value={formData.age}
                 error={Boolean(errors.age)}
-                helperText={errors.age ? "Required" : ""}
+                helperText={errors.age ?? ""}
                 onChange={handleChange("age")}
+                inputProps={{ min: 18, max: 99, inputMode: "numeric", pattern: "[0-9]*" }}
                 fullWidth
               />
 
@@ -124,7 +156,7 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
                 label="Instagram Handle"
                 value={formData.instagram}
                 error={Boolean(errors.instagram)}
-                helperText={errors.instagram ? "Required" : ""}
+                helperText={errors.instagram ?? ""}
                 onChange={handleChange("instagram")}
                 fullWidth
               />
@@ -135,7 +167,7 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
                 label="Email"
                 value={formData.email}
                 error={Boolean(errors.email)}
-                helperText={errors.email ? "Required" : ""}
+                helperText={errors.email ?? ""}
                 onChange={handleChange("email")}
                 fullWidth
               />
@@ -143,6 +175,8 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
               <TextField
                 label="OnlyFans Username"
                 value={formData.onlyfans}
+                error={Boolean(errors.onlyfans)}
+                helperText={errors.onlyfans ?? ""}
                 onChange={handleChange("onlyfans")}
                 fullWidth
               />
