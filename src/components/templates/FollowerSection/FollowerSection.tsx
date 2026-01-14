@@ -42,7 +42,7 @@ const FollowerSection = () => {
       entries => {
         if (entries[0].isIntersecting && !hasAnimated) {
           animateCount(700000, 1000, setTiktokFollowers)
-          animateCount(855000, 1000, setInstagramFollowers)
+          animateCount(1100000, 1000, setInstagramFollowers)
           setHasAnimated(true)
         }
       },
@@ -85,4 +85,3 @@ const FollowerSection = () => {
 }
 
 export default FollowerSection
-
