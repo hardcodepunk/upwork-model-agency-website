@@ -10,12 +10,9 @@ import Typography from "@mui/material/Typography"
 import { StyledPanel } from "./InfoPanel.styles"
 
 // Components
-import ButtonCustom from "@/components/atoms/ButtonCustom/ButtonCustom"
+import BookCallButton from "@/components/atoms/BookCallButton/BookCallButton"
 
-// Properties
-import { InfoPanelProps } from "./InfoPanel.props"
-
-function InfoPanel({ setIsOpen }: InfoPanelProps) {
+function InfoPanel() {
   const [scrollProgress, setScrollProgress] = useState(0)
 
   const handleScroll = () => {
@@ -39,7 +36,7 @@ function InfoPanel({ setIsOpen }: InfoPanelProps) {
       <Typography variant="h2">
         Work less,<br></br>get paid more
       </Typography>
-      <ButtonCustom onClick={() => setIsOpen(true)}>Apply here</ButtonCustom>
+      <BookCallButton />
     </StyledPanel>
   )
 }

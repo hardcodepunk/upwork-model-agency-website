@@ -11,12 +11,9 @@ import {
 
 // Components
 import MainNav from "@/components/organisms/MainNav/MainNav"
-import ButtonCustom from "@/components/atoms/ButtonCustom/ButtonCustom"
+import BookCallButton from "@/components/atoms/BookCallButton/BookCallButton"
 
-// Properties
-import { SplashProps } from "./Splash.props"
-
-const Splash = ({ setIsOpen }: SplashProps) => {
+const Splash = () => {
   return (
     <StyledSplash>
       <MainNav />
@@ -34,7 +31,7 @@ const Splash = ({ setIsOpen }: SplashProps) => {
         </StyledSplashBodyLeft>
         <StyledSplashBodyRight>
           Accepting only <StyledSplashBodyRightEmphasis>a select number</StyledSplashBodyRightEmphasis> of models
-          <ButtonCustom onClick={() => setIsOpen(true)}>Become Valhalla girl</ButtonCustom>
+          <BookCallButton />
         </StyledSplashBodyRight>
       </StyledSplashBody>
     </StyledSplash>

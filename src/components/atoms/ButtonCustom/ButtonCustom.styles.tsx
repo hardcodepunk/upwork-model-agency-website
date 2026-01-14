@@ -1,8 +1,7 @@
-// MUI
-import { Button, ButtonProps } from "@mui/material"
+import Button from "@mui/material/Button"
 import { styled } from "@mui/material/styles"
 
-export const StyledButton = styled(Button)<ButtonProps>(({ theme }) => ({
+export const StyledButton = styled(Button)(({ theme }) => ({
   fontFamily: "Norse, Arial, sans-serif",
   fontSize: "22px",
   fontWeight: "800",
