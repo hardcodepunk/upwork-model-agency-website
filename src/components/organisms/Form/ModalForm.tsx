@@ -5,6 +5,8 @@ import { FormContainer, FormSectionTitle } from "./ModalForm.styles"
 import { ModalFormProps } from "./ModalForm.props"
 import { APPLICATION_FORM_FIELDS, initialFormData } from "@/lib/applicationForm"
 
+const CALENDLY_APPLY_URL = "https://calendly.com/bvon878-gocn/30min"
+
 type FormData = typeof initialFormData & {
   renderedAt?: number
   turnstileToken?: string
@@ -106,13 +108,26 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
     <Dialog open={open} onClose={handleClose} scroll="paper" fullWidth maxWidth="sm">
       <DialogContent dividers>
         {success ? (
-          <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={4}>
+          <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={4} gap={2}>
             <Typography variant="h3" gutterBottom>
               To Valhalla!
             </Typography>
+
             <Typography variant="body1" textAlign="center">
               We&apos;ve successfully received your application. We&apos;ll be in touch soon.
             </Typography>
+
+            <Typography variant="body1" textAlign="center">
+              Want to speed things up? You can optionally schedule a quick call.
+            </Typography>
+
+            <Box display="flex" gap={2} flexWrap="wrap" justifyContent="center">
+              <ButtonCustom component="a" href={CALENDLY_APPLY_URL} target="_blank" rel="noopener noreferrer">
+                Schedule optional call
+              </ButtonCustom>
+
+              <ButtonCustom onClick={handleClose}>Close</ButtonCustom>
+            </Box>
           </Box>
         ) : (
           <Box component="form" onSubmit={handleSubmit} noValidate>
@@ -193,12 +208,6 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
           </Box>
         )}
       </DialogContent>
-
-      {success && (
-        <DialogActions>
-          <ButtonCustom onClick={handleClose}>Close</ButtonCustom>
-        </DialogActions>
-      )}
     </Dialog>
   )
 }
