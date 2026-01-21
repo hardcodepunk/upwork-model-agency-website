@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react"
 import { Dialog, DialogContent, DialogActions, TextField, Box, Typography } from "@mui/material"
+import ButtonCustom from "@/components/atoms/ButtonCustom/ButtonCustom"
 import { FormContainer, FormSectionTitle } from "./ModalForm.styles"
 import { ModalFormProps } from "./ModalForm.props"
 import { APPLICATION_FORM_FIELDS, initialFormData } from "@/lib/applicationForm"
-import ButtonCustom from "@/components/atoms/ButtonCustom/ButtonCustom"
 
 const CALENDLY_APPLY_URL = "https://calendly.com/bvon878-gocn/30min"
 
