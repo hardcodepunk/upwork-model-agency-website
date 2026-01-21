@@ -1,10 +1,9 @@
-// MUI
-import { ButtonProps } from "@mui/material"
-
 // Styles
 import { StyledButton } from "./ButtonCustom.styles"
 
-const ButtonCustom = (props: ButtonProps) => {
+type ButtonCustomProps = React.ComponentProps<typeof StyledButton>
+
+const ButtonCustom = (props: ButtonCustomProps) => {
   return <StyledButton {...props} />
 }
 
