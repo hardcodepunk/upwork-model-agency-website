@@ -1,6 +1,6 @@
 import { StyledButton } from "./ButtonCustom.styles"
 
-type ButtonCustomProps = React.ComponentPropsWithoutRef<typeof StyledButton>
+type ButtonCustomProps = React.ComponentProps<typeof StyledButton>
 
 const ButtonCustom = (props: ButtonCustomProps) => {
   return <StyledButton {...props} />
