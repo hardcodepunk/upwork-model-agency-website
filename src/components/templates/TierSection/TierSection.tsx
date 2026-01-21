@@ -16,45 +16,41 @@ const TierSection = () => {
   const [fadeInIndex, setFadeInIndex] = useState(0)
 
   useEffect(() => {
+    const element = sectionRef.current
+    if (!element) return
+
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting) {
           setIsVisible(true)
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     )
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
+    observer.observe(element)
 
     return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current)
-      }
+      observer.unobserve(element)
     }
   }, [])
 
   useEffect(() => {
-    if (isVisible) {
-      const interval = setInterval(() => {
-        setFadeInIndex(prev => prev + 1)
-      }, 300)
-
-      if (fadeInIndex >= 3) {
-        clearInterval(interval)
-      }
-
-      return () => clearInterval(interval)
-    }
-  }, [isVisible, fadeInIndex])
+    if (!isVisible) return
+    const interval = setInterval(() => {
+      setFadeInIndex(prev => {
+        if (prev >= 3) return prev
+        return prev + 1
+      })
+    }, 300)
+    return () => clearInterval(interval)
+  }, [isVisible])
 
   return (
     <StyledContainerTierSection>
       <StyledContainer>
         <StyledSection ref={sectionRef} container spacing={{ xs: 2, md: 4 }}>
-          <StyledTier item xs={12} sm={6} md={4} className={fadeInIndex >= 1 ? "fade-in" : ""}>
+          <StyledTier size={{ xs: 12, sm: 6, md: 4 }} className={fadeInIndex >= 1 ? "fade-in" : ""}>
             <StyledTierIcon src="/icons/icon__tier.svg" alt="Gold Tier 1" width={50} height={70} />
             <Typography color="secondary" variant="h3">
               Tailored Content Strategy
@@ -64,7 +60,8 @@ const TierSection = () => {
               messaging that work best to build your brand and make your impact felt.
             </Typography>
           </StyledTier>
-          <StyledTier item xs={12} sm={6} md={4} className={fadeInIndex >= 2 ? "fade-in" : ""}>
+
+          <StyledTier size={{ xs: 12, sm: 6, md: 4 }} className={fadeInIndex >= 2 ? "fade-in" : ""}>
             <StyledTierIcon src="/icons/icon__tier.svg" alt="Silver Tier 2" width={50} height={70} />
             <Typography color="secondary" variant="h3">
               Massive Platform Reach
@@ -74,7 +71,8 @@ const TierSection = () => {
               We ensure that every post finds its perfect audience without you having to lift a finger.
             </Typography>
           </StyledTier>
-          <StyledTier item xs={12} sm={6} md={4} className={fadeInIndex >= 3 ? "fade-in" : ""}>
+
+          <StyledTier size={{ xs: 12, sm: 6, md: 4 }} className={fadeInIndex >= 3 ? "fade-in" : ""}>
             <StyledTierIcon src="/icons/icon__tier.svg" alt="Bronze Tier 3" width={50} height={70} />
             <Typography color="secondary" variant="h3">
               Effortless Growth and Earnings

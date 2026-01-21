@@ -5,10 +5,10 @@ import Image from "next/image"
 import theme from "@/theme"
 
 // MUI
-import Grid, { GridProps } from "@mui/material/Grid"
-import { styled } from "@mui/material"
+import Grid from "@mui/material/Grid2"
+import { styled } from "@mui/material/styles"
 
-export const StyledContainerTierSection = styled(Grid)<GridProps>(() => ({
+export const StyledContainerTierSection = styled(Grid)(() => ({
   minHeight: "80vh",
   paddingTop: "340px",
   paddingBottom: "100px",
@@ -16,7 +16,7 @@ export const StyledContainerTierSection = styled(Grid)<GridProps>(() => ({
     "linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.70) 40%, rgba(255, 255, 255, 1) 100%)",
 }))
 
-export const StyledSection = styled(Grid)<GridProps>(() => ({
+export const StyledSection = styled(Grid)(() => ({
   display: "flex",
   justifyContent: "center",
   [theme.breakpoints.down("sm")]: {
@@ -24,7 +24,7 @@ export const StyledSection = styled(Grid)<GridProps>(() => ({
   },
 }))
 
-export const StyledTier = styled(Grid)<GridProps>(() => ({
+export const StyledTier = styled(Grid)(() => ({
   opacity: 0,
   transform: "translateY(30px)",
   transition: "opacity 0.6s ease-out, transform 0.6s ease-out",
