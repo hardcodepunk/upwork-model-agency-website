@@ -6,10 +6,13 @@ import InfoPanel from "@/components/molecules/InfoPanel/InfoPanel"
 // Styles
 import { StyledSection } from "./InfoSection.styles"
 
-const InfoSection = () => {
+// Properties
+import { InfoSectionProps } from "./InfoSection.props"
+
+const InfoSection = ({ setIsOpen }: InfoSectionProps) => {
   return (
     <StyledSection>
-      <InfoPanel />
+      <InfoPanel setIsOpen={setIsOpen} />
     </StyledSection>
   )
 }

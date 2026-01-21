@@ -1,15 +1,18 @@
 "use client"
 
 // Components
-import BookCallButton from "@/components/atoms/BookCallButton/BookCallButton"
+import ButtonCustom from "@/components/atoms/ButtonCustom/ButtonCustom"
 
 // Styles
 import { StyledContainerCtaSection } from "./CtaSection.styles"
 
-export function CtaSection() {
+// Properties
+import { CtaSectionProps } from "./CtaSection.props"
+
+export function CtaSection({ setIsOpen }: CtaSectionProps) {
   return (
     <StyledContainerCtaSection>
-      <BookCallButton />
+      <ButtonCustom onClick={() => setIsOpen(true)}>Apply now</ButtonCustom>
     </StyledContainerCtaSection>
   )
 }
