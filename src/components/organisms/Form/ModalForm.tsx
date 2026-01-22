@@ -129,12 +129,12 @@ const ModalForm = ({ open, handleClose }: ModalFormProps) => {
             </Typography>
 
             <Typography variant="body1" textAlign="center">
-              Want to speed things up? You can optionally schedule a quick call.
+              Want to speed things up? You can schedule a quick call.
             </Typography>
 
             <Box display="flex" gap={2} flexWrap="wrap" justifyContent="center">
               <ButtonCustom href={CALENDLY_APPLY_URL} target="_blank" rel="noopener noreferrer">
-                Schedule optional call
+                Schedule call
               </ButtonCustom>
 
               <ButtonCustom onClick={handleClose}>Close</ButtonCustom>
