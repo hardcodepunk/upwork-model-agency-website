@@ -20,13 +20,21 @@ export const metadata: Metadata = {
   title: "Valhalla Girls",
   description: "Become a Valhalla Girl and enter today.",
   icons: {
-    icon: [{ url: "/favicon.ico" }, { url: "/icon.svg", type: "image/svg+xml" }],
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      {
+        url: "/favicon-96x96.png",
+        sizes: "96x96",
+        type: "image/png",
+      },
+    ],
     apple: "/apple-icon.png",
   },
   appleWebApp: {
     title: "Valhalla Girls",
-    statusBarStyle: "default",
     capable: true,
+    statusBarStyle: "default",
   },
 }
 
